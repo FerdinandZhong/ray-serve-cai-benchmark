@@ -46,9 +46,10 @@ fi
 if [ "$SKIP_SETUP" = "true" ]; then
     echo "Skipping environment setup (use FORCE_REINSTALL=true to force)"
 
-    # Verify the installation
+    # Verify the installation (unset MPLBACKEND to avoid Jupyter kernel conflict)
     echo "Verifying installation..."
     source "$VENV_PATH/bin/activate"
+    unset MPLBACKEND
     python -c "import locust; import httpx; print(f'Locust: {locust.__version__}, httpx: {httpx.__version__}')"
 
     echo "=============================================================="
@@ -162,8 +163,9 @@ else
         echo "All dependencies installed successfully"
     fi
 
-    # Verify installation
+    # Verify installation (unset MPLBACKEND to avoid Jupyter kernel conflict)
     echo "Verifying installation..."
+    unset MPLBACKEND
     python -c "
 import locust
 import httpx
