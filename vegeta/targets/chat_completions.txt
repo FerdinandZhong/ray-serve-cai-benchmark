@@ -1,0 +1,3 @@
+POST ${BASE_URL}${VLLM_ROUTE}/v1/chat/completions
+Content-Type: application/json
+@vegeta/bodies/chat_body.json

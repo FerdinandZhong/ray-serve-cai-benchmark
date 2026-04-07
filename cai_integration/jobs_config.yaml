@@ -1,0 +1,71 @@
+# ray-serve-cai-bench: CAI Job Configuration
+# Pipeline: setup_environment -> Locust Web UI Applications
+#
+# Two CAI Applications are deployed:
+#   - Locust YOLO: load tests against YOLO object detection endpoint
+#   - Locust vLLM: load tests against vLLM chat completion endpoint
+#
+# Both use Locust's interactive web UI, accessible via the CAI Applications tab.
+# The inference service URL is configurable per application.
+#
+# Usage:
+#   python3 cai_integration/create_jobs.py --project-id $CML_PROJECT_ID
+#   python3 cai_integration/trigger_jobs.py --project-id $CML_PROJECT_ID
+
+jobs:
+  # ── Stage 1: Environment Setup ──────────────────────────────────────────
+  setup_environment:
+    name: "Benchmark - Setup Environment"
+    script: "cai_integration/setup_environment.py"
+    kernel: "python3"
+    cpu: 4
+    memory: 8
+    gpu: 0
+    timeout: 1800
+    parent_job_key: null
+    environment:
+      FORCE_REINSTALL: "false"
+
+  # ── Locust YOLO Application ────────────────────────────────────────────
+  # Interactive web UI for YOLO object detection load testing.
+  # INFERENCE_URL: full base URL of the YOLO inference service
+  # YOLO_ROUTE:    route prefix on the service (default: /yolo)
+  # DATASET_DIR:   path to test images
+  deploy_locust_yolo:
+    name: "Benchmark - Locust YOLO App"
+    script: "cai_integration/deploy_locust_app.py"
+    kernel: "python3"
+    cpu: 4
+    memory: 8
+    gpu: 0
+    timeout: 86400
+    parent_job_key: setup_environment
+    environment:
+      LOCUST_FILE: "locust/locustfile_yolo.py"
+      INFERENCE_URL: ""
+      YOLO_ROUTE: "/v1/detect"
+      DATASET_DIR: "datasets/sample_images"
+      LOCUST_USERS: "10"
+      LOCUST_RATE: "5"
+
+  # ── Locust vLLM Application ────────────────────────────────────────────
+  # Interactive web UI for vLLM chat completion load testing.
+  # INFERENCE_URL: full base URL of the vLLM inference service
+  # VLLM_ROUTE:    route prefix on the service (default: /qwen-2b)
+  # VLLM_MODEL:    model path for chat payload
+  deploy_locust_vllm:
+    name: "Benchmark - Locust vLLM App"
+    script: "cai_integration/deploy_locust_app.py"
+    kernel: "python3"
+    cpu: 4
+    memory: 8
+    gpu: 0
+    timeout: 86400
+    parent_job_key: setup_environment
+    environment:
+      LOCUST_FILE: "locust/locustfile_chat.py"
+      INFERENCE_URL: ""
+      VLLM_ROUTE: "/qwen-2b"
+      VLLM_MODEL: "/home/cdsw/models/Qwen3.5-2B"
+      LOCUST_USERS: "10"
+      LOCUST_RATE: "5"

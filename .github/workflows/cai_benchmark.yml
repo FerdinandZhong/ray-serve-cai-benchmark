@@ -1,0 +1,117 @@
+name: CAI Locust Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      inference_url:
+        description: "Full base URL of the inference service"
+        required: true
+        type: string
+      app_type:
+        description: "Which Locust application to deploy"
+        required: true
+        default: "yolo"
+        type: choice
+        options:
+          - yolo
+          - vllm
+      dataset_dir:
+        description: "Image dataset directory for YOLO tests (relative to project root)"
+        required: false
+        default: "datasets/sample_images"
+        type: string
+      locust_users:
+        description: "Default number of Locust users"
+        required: false
+        default: "10"
+        type: string
+      locust_rate:
+        description: "Default user spawn rate per second"
+        required: false
+        default: "5"
+        type: string
+      cai_action:
+        description: "CAI action to perform"
+        required: true
+        default: "create_and_trigger"
+        type: choice
+        options:
+          - create_and_trigger
+          - create
+          - trigger
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ── CAI Job Management ──────────────────────────────────────────────────
+  # Creates and/or triggers Locust app jobs on the CAI platform
+  cai-deploy:
+    name: CAI ${{ github.event.inputs.cai_action }} - Locust ${{ github.event.inputs.app_type }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml requests
+
+      - name: Create CAI jobs
+        if: contains(fromJSON('["create", "create_and_trigger"]'), github.event.inputs.cai_action)
+        env:
+          CML_HOST: ${{ secrets.CML_HOST }}
+          CML_API_KEY: ${{ secrets.CML_API_KEY }}
+          CML_PROJECT_ID: ${{ secrets.CML_PROJECT_ID }}
+        run: |
+          python cai_integration/create_jobs.py \
+            --project-id "$CML_PROJECT_ID" \
+            --config cai_integration/jobs_config.yaml
+
+      - name: Determine target job
+        id: target
+        run: |
+          if [ "${{ github.event.inputs.app_type }}" = "yolo" ]; then
+            echo "job_name=deploy_locust_yolo" >> "$GITHUB_OUTPUT"
+          else
+            echo "job_name=deploy_locust_vllm" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger CAI application
+        if: contains(fromJSON('["trigger", "create_and_trigger"]'), github.event.inputs.cai_action)
+        env:
+          CML_HOST: ${{ secrets.CML_HOST }}
+          CML_API_KEY: ${{ secrets.CML_API_KEY }}
+          CML_PROJECT_ID: ${{ secrets.CML_PROJECT_ID }}
+        run: |
+          python cai_integration/trigger_jobs.py \
+            --project-id "$CML_PROJECT_ID" \
+            --jobs-config cai_integration/jobs_config.yaml \
+            --job "${{ steps.target.outputs.job_name }}" \
+            --env "INFERENCE_URL=${{ github.event.inputs.inference_url }}" \
+            --env "DATASET_DIR=${{ github.event.inputs.dataset_dir }}" \
+            --env "LOCUST_USERS=${{ github.event.inputs.locust_users }}" \
+            --env "LOCUST_RATE=${{ github.event.inputs.locust_rate }}"
+
+      - name: Post summary
+        if: always()
+        run: |
+          echo "## CAI Locust Deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Parameter | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Action | ${{ github.event.inputs.cai_action }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| App Type | ${{ github.event.inputs.app_type }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Inference URL | ${{ github.event.inputs.inference_url }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Dataset Dir | ${{ github.event.inputs.dataset_dir }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Users | ${{ github.event.inputs.locust_users }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Spawn Rate | ${{ github.event.inputs.locust_rate }}/s |" >> "$GITHUB_STEP_SUMMARY"

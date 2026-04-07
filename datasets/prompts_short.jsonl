@@ -1,0 +1,50 @@
+{"prompt": "What is machine learning?", "max_tokens": 133}
+{"prompt": "Explain the difference between TCP and UDP.", "max_tokens": 111}
+{"prompt": "Write a Python function that reverses a string.", "max_tokens": 112}
+{"prompt": "What causes ocean tides?", "max_tokens": 163}
+{"prompt": "Describe the architecture of a transformer model.", "max_tokens": 128}
+{"prompt": "How does garbage collection work in Java?", "max_tokens": 154}
+{"prompt": "What is the CAP theorem in distributed systems?", "max_tokens": 189}
+{"prompt": "Explain how RSA encryption works.", "max_tokens": 108}
+{"prompt": "What are the main differences between SQL and NoSQL databases?", "max_tokens": 158}
+{"prompt": "Describe the process of photosynthesis.", "max_tokens": 107}
+{"prompt": "How does a compiler differ from an interpreter?", "max_tokens": 157}
+{"prompt": "What is Kubernetes and why is it useful?", "max_tokens": 102}
+{"prompt": "Explain the concept of recursion with an example.", "max_tokens": 108}
+{"prompt": "What are microservices and how do they compare to monoliths?", "max_tokens": 133}
+{"prompt": "How does HTTP/2 improve on HTTP/1.1?", "max_tokens": 64}
+{"prompt": "What is a neural network activation function?", "max_tokens": 147}
+{"prompt": "Explain the concept of eventual consistency.", "max_tokens": 157}
+{"prompt": "What are the SOLID principles in software engineering?", "max_tokens": 107}
+{"prompt": "How does DNS resolution work?", "max_tokens": 89}
+{"prompt": "What is the difference between a process and a thread?", "max_tokens": 93}
+{"prompt": "Explain how a hash table works internally.", "max_tokens": 102}
+{"prompt": "What is gradient descent and why is it important?", "max_tokens": 99}
+{"prompt": "Describe the OSI model layers.", "max_tokens": 126}
+{"prompt": "How does TLS/SSL secure a connection?", "max_tokens": 119}
+{"prompt": "What is Docker and how does it differ from virtual machines?", "max_tokens": 153}
+{"prompt": "Explain MapReduce in simple terms.", "max_tokens": 93}
+{"prompt": "What is a REST API?", "max_tokens": 150}
+{"prompt": "How does Git branching work?", "max_tokens": 140}
+{"prompt": "What is the difference between supervised and unsupervised learning?", "max_tokens": 113}
+{"prompt": "Explain the concept of database normalization.", "max_tokens": 171}
+{"prompt": "What is Ray Serve and how does it handle scaling?", "max_tokens": 84}
+{"prompt": "Describe the benefits of using FastAPI over Flask.", "max_tokens": 160}
+{"prompt": "How does a load balancer distribute traffic?", "max_tokens": 128}
+{"prompt": "What is the difference between latency and throughput?", "max_tokens": 133}
+{"prompt": "Explain what a placement group is in Ray.", "max_tokens": 112}
+{"prompt": "How does vLLM achieve high throughput for LLM inference?", "max_tokens": 79}
+{"prompt": "What is continuous batching in LLM serving?", "max_tokens": 108}
+{"prompt": "Explain the KV cache and why it matters for transformers.", "max_tokens": 78}
+{"prompt": "What is tensor parallelism?", "max_tokens": 84}
+{"prompt": "How does prefix caching improve LLM serving performance?", "max_tokens": 84}
+{"prompt": "What is the difference between greedy and beam search decoding?", "max_tokens": 76}
+{"prompt": "Explain attention mechanisms in transformers.", "max_tokens": 162}
+{"prompt": "What is quantization in the context of neural networks?", "max_tokens": 165}
+{"prompt": "How does RLHF work for aligning language models?", "max_tokens": 78}
+{"prompt": "What is the difference between BF16 and FP16?", "max_tokens": 161}
+{"prompt": "Explain the concept of speculative decoding.", "max_tokens": 176}
+{"prompt": "What is a LoRA adapter?", "max_tokens": 79}
+{"prompt": "How does flash attention reduce memory usage?", "max_tokens": 130}
+{"prompt": "What are embedding models used for?", "max_tokens": 125}
+{"prompt": "Explain the difference between encoder and decoder transformers.", "max_tokens": 78}

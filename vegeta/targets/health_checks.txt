@@ -1,0 +1,5 @@
+GET ${BASE_URL}${VLLM_ROUTE}/health
+
+GET ${BASE_URL}${YOLO_ROUTE}/health
+
+GET ${BASE_URL}/api/health
