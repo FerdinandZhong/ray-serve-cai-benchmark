@@ -54,12 +54,12 @@ def run_locust(
     csv_prefix = results_dir / f"locust_{profile_name}"
     log_file = results_dir / f"locust_{profile_name}.log"
 
-    # Use venv Python if available (setup_environment.py installs deps there)
-    venv_python = Path("/home/cdsw/.venv/bin/python")
-    python_bin = str(venv_python) if venv_python.exists() else sys.executable
+    # Use venv locust binary directly (setup_environment.py installs deps there)
+    venv_locust = Path("/home/cdsw/.venv/bin/locust")
+    locust_bin = str(venv_locust) if venv_locust.exists() else "locust"
 
     cmd = [
-        python_bin, "-m", "locust",
+        locust_bin,
         "-f", locustfile,
         "--headless",
         "-u", str(users),
