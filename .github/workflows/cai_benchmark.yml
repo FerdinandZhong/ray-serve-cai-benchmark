@@ -81,12 +81,24 @@ jobs:
             --project-id ${{ needs.setup-project.outputs.project_id }}
           echo "Jobs created"
 
+      - name: Create CML Applications
+        env:
+          CML_HOST: ${{ secrets.CML_HOST }}
+          CML_API_KEY: ${{ secrets.CML_API_KEY }}
+        run: |
+          echo "Creating CML applications..."
+          python cai_integration/create_applications.py \
+            --project-id ${{ needs.setup-project.outputs.project_id }}
+          echo "Applications created"
+
       - name: Create job summary
         if: always()
         run: |
-          echo "## Benchmark Setup: Jobs" >> $GITHUB_STEP_SUMMARY
+          echo "## Benchmark Setup: Jobs & Applications" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "**Project ID**: ${{ needs.setup-project.outputs.project_id }}" >> $GITHUB_STEP_SUMMARY
-
-  # Locust applications are started from the CAI UI with INFERENCE_URL
-  # set at runtime. No trigger-app job needed here.
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Run the **Setup Environment** job in CAI to install dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "2. Set **INFERENCE_URL** in the application environment via CAI UI" >> $GITHUB_STEP_SUMMARY
+          echo "3. Start the Locust application from the CAI Applications tab" >> $GITHUB_STEP_SUMMARY
