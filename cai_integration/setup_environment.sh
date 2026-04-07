@@ -102,15 +102,13 @@ else
     fi
 
     # Determine requirements file
+    # Default: install core benchmark deps directly (avoids editable install issues)
+    CORE_DEPS="locust>=2.29 httpx>=0.27 aiohttp>=3.9 Pillow>=10.0 pyyaml>=6.0 matplotlib>=3.8 python-dotenv>=1.0"
     if [ -n "${REQUIREMENTS_FILE:-}" ] && [ -f "$REQUIREMENTS_FILE" ]; then
         echo "Using requirements file from REQUIREMENTS_FILE env var: $REQUIREMENTS_FILE"
-    elif [ -f "pyproject.toml" ]; then
-        # Install from pyproject.toml (editable)
-        REQUIREMENTS_FILE=""
-        echo "Installing from pyproject.toml..."
     else
-        echo "Error: No requirements file or pyproject.toml found"
-        exit 1
+        REQUIREMENTS_FILE=""
+        echo "Installing core benchmark dependencies..."
     fi
 
     if [ "$USE_UV" = "true" ]; then
@@ -128,7 +126,7 @@ else
             if [ -n "$REQUIREMENTS_FILE" ]; then
                 INSTALL_CMD="uv pip install -r $REQUIREMENTS_FILE"
             else
-                INSTALL_CMD="uv pip install -e ."
+                INSTALL_CMD="uv pip install $CORE_DEPS"
             fi
 
             if $INSTALL_CMD; then
@@ -147,7 +145,7 @@ else
                     if [ -n "$REQUIREMENTS_FILE" ]; then
                         pip install -r "$REQUIREMENTS_FILE"
                     else
-                        pip install -e .
+                        pip install $CORE_DEPS
                     fi
                     echo "All dependencies installed successfully (via pip fallback)"
                 fi
@@ -159,7 +157,7 @@ else
         if [ -n "$REQUIREMENTS_FILE" ]; then
             pip install -r "$REQUIREMENTS_FILE"
         else
-            pip install -e .
+            pip install $CORE_DEPS
         fi
         echo "All dependencies installed successfully"
     fi
