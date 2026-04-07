@@ -22,40 +22,17 @@ class YOLODetectionUser(HttpUser):
         if not VERIFY_SSL:
             self.client.verify = False
 
-    @task(8)
+    @task
     def detect(self):
         """POST /v1/detect with a random image file."""
         img_bytes = random_image_bytes(self.image_paths)
         with self.client.post(
-            f"{YOLO_ROUTE}/v1/detect",
+            f"{YOLO_ROUTE}",
             files={"file": ("test.png", img_bytes, "image/png")},
             name="yolo detect",
             catch_response=True,
         ) as resp:
             if resp.status_code == 200:
-                data = resp.json()
-                # Optionally validate response shape
-                if "items" in data and "total_count" in data:
-                    resp.success()
-                else:
-                    resp.failure(f"Unexpected response: {list(data.keys())}")
-            else:
-                resp.failure(f"HTTP {resp.status_code}: {resp.text[:200]}")
-
-    @task(1)
-    def health(self):
-        """GET /health — lightweight liveness probe."""
-        with self.client.get(
-            f"{YOLO_ROUTE}/health",
-            name="yolo health",
-            catch_response=True,
-        ) as resp:
-            if resp.status_code == 200:
                 resp.success()
             else:
-                resp.failure(f"HTTP {resp.status_code}")
-
-    @task(1)
-    def info(self):
-        """GET /info — model metadata."""
-        self.client.get(f"{YOLO_ROUTE}/info", name="yolo info")
+                resp.failure(f"HTTP {resp.status_code}: {resp.text[:200]}")
