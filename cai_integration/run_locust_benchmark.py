@@ -54,9 +54,22 @@ def run_locust(
     csv_prefix = results_dir / f"locust_{profile_name}"
     log_file = results_dir / f"locust_{profile_name}.log"
 
-    # Use venv locust binary directly (setup_environment.py installs deps there)
-    venv_locust = Path("/home/cdsw/.venv/bin/locust")
-    locust_bin = str(venv_locust) if venv_locust.exists() else "locust"
+    # Find locust binary — check venv first, then common paths
+    locust_bin = None
+    for candidate in [
+        "/home/cdsw/.venv/bin/locust",
+        "/usr/local/bin/locust",
+        "/usr/bin/locust",
+    ]:
+        if Path(candidate).exists():
+            locust_bin = candidate
+            break
+    if not locust_bin:
+        import shutil
+        locust_bin = shutil.which("locust")
+    if not locust_bin:
+        print("Error: locust not found. Run setup_environment first.")
+        sys.exit(1)
 
     cmd = [
         locust_bin,

@@ -72,12 +72,23 @@ def main():
     print("Locust web UI will be available at the CAI Application URL")
     print()
 
-    # Use venv locust binary directly (setup_environment.py installs deps there)
-    venv_locust = Path("/home/cdsw/.venv/bin/locust")
-    if venv_locust.exists():
-        locust_bin = str(venv_locust)
-    else:
-        locust_bin = "locust"
+    # Find locust binary — check venv first, then common paths
+    locust_bin = None
+    for candidate in [
+        "/home/cdsw/.venv/bin/locust",
+        "/usr/local/bin/locust",
+        "/usr/bin/locust",
+    ]:
+        if Path(candidate).exists():
+            locust_bin = candidate
+            break
+    if not locust_bin:
+        # Last resort: find via venv python -c
+        import shutil
+        locust_bin = shutil.which("locust")
+    if not locust_bin:
+        print("Error: locust not found. Run setup_environment first.")
+        sys.exit(1)
 
     cmd = [
         locust_bin,

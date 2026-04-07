@@ -62,7 +62,7 @@ else
             echo "Removing existing virtual environment for reinstall..."
             rm -rf "$VENV_PATH"
             echo "Creating new virtual environment at $VENV_PATH"
-            python3 -m venv "$VENV_PATH"
+            python3.11 -m venv "$VENV_PATH" || python3 -m venv "$VENV_PATH"
             echo "Virtual environment created successfully"
         else
             echo "Virtual environment already exists at $VENV_PATH"
@@ -70,7 +70,7 @@ else
         fi
     else
         echo "Creating new virtual environment at $VENV_PATH"
-        python3 -m venv "$VENV_PATH"
+        python3.11 -m venv "$VENV_PATH" || python3 -m venv "$VENV_PATH"
         echo "Virtual environment created successfully"
     fi
 
