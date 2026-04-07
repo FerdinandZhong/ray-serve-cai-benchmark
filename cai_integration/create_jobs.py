@@ -133,8 +133,9 @@ class JobManager:
         if parent_job_id:
             job_data["parent_job_id"] = parent_job_id
 
-        if "runtime_identifier" in job_config:
-            job_data["runtime_identifier"] = job_config["runtime_identifier"]
+        runtime_id = job_config.get("runtime_identifier") or self._default_runtime
+        if runtime_id:
+            job_data["runtime_identifier"] = runtime_id
 
         if "environment" in job_config:
             job_data["environment"] = job_config["environment"]
@@ -164,6 +165,9 @@ class JobManager:
         if not config or "jobs" not in config:
             print("Invalid or empty jobs configuration")
             return {}
+
+        # Store top-level runtime_identifier as default for all jobs
+        self._default_runtime = config.get("runtime_identifier", "")
 
         # Apply runner-environment injections
         if job_env_injections:

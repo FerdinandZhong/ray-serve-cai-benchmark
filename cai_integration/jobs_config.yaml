@@ -12,6 +12,8 @@
 #   python3 cai_integration/create_jobs.py --project-id $CML_PROJECT_ID
 #   python3 cai_integration/trigger_jobs.py --project-id $CML_PROJECT_ID
 
+runtime_identifier: "docker.repository.cloudera.com/cloudera/cdsw/ml-runtime-pbj-jupyterlab-python3.11-standard:2026.01.1-b6"
+
 jobs:
   # ── Stage 1: Environment Setup ──────────────────────────────────────────
   setup_environment:
