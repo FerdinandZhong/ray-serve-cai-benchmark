@@ -72,8 +72,12 @@ def main():
     print("Locust web UI will be available at the CAI Application URL")
     print()
 
+    # Use venv Python if available (setup_environment.py installs deps there)
+    venv_python = Path("/home/cdsw/.venv/bin/python")
+    python_bin = str(venv_python) if venv_python.exists() else sys.executable
+
     cmd = [
-        sys.executable, "-m", "locust",
+        python_bin, "-m", "locust",
         "-f", str(locustfile_path),
         "--web-host", "127.0.0.1",
         "--web-port", app_port,
