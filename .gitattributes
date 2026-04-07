@@ -1,3 +1,1 @@
-datasets/sample_images/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
-datasets/sample_images/**/*.jpg filter=lfs diff=lfs merge=lfs -text
-datasets/sample_images/**/*.png filter=lfs diff=lfs merge=lfs -text
+# Git LFS - intentionally empty, sample images are small enough for regular git
