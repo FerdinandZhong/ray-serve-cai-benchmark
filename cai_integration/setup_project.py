@@ -154,7 +154,10 @@ class ProjectSetup:
             print("   Set GITHUB_REPOSITORY to create project with git")
             return None
 
-        git_url = f"https://github.com/{self.github_repo}"
+        if self.gh_pat:
+            git_url = f"https://{self.gh_pat}@github.com/{self.github_repo}"
+        else:
+            git_url = f"https://github.com/{self.github_repo}"
         return self.create_project_with_git(self.project_name, git_url)
 
     def wait_for_git_clone(self, project_id: str, timeout: int = 900) -> bool:
