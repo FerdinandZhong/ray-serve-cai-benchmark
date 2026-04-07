@@ -3,23 +3,6 @@ name: Deploy Locust Benchmark to CML
 on:
   workflow_dispatch:
     inputs:
-      app_type:
-        description: 'Locust application to deploy (yolo or vllm)'
-        required: true
-        default: 'yolo'
-        type: choice
-        options:
-          - yolo
-          - vllm
-      inference_url:
-        description: 'Full base URL of the inference service'
-        required: true
-        type: string
-      dataset_dir:
-        description: 'Image dataset directory for YOLO tests (relative to project root)'
-        required: false
-        default: 'datasets/sample_images'
-        type: string
       force_rebuild:
         description: 'Force rebuild (rerun all jobs)'
         required: false
@@ -105,63 +88,5 @@ jobs:
           echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "**Project ID**: ${{ needs.setup-project.outputs.project_id }}" >> $GITHUB_STEP_SUMMARY
 
-  trigger-app:
-    needs: [setup-project, create-jobs]
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests pyyaml
-
-      - name: Determine target job
-        id: target
-        run: |
-          if [ "${{ github.event.inputs.app_type }}" = "yolo" ]; then
-            echo "job_name=deploy_locust_yolo" >> $GITHUB_OUTPUT
-            echo "Targeting: Locust YOLO App"
-          else
-            echo "job_name=deploy_locust_vllm" >> $GITHUB_OUTPUT
-            echo "Targeting: Locust vLLM App"
-          fi
-
-      - name: Trigger Locust Application
-        env:
-          CML_HOST: ${{ secrets.CML_HOST }}
-          CML_API_KEY: ${{ secrets.CML_API_KEY }}
-          FORCE_REBUILD: ${{ github.event.inputs.force_rebuild || 'false' }}
-        run: |
-          echo "Triggering Locust ${{ github.event.inputs.app_type }} application..."
-          python cai_integration/trigger_jobs.py \
-            --project-id ${{ needs.setup-project.outputs.project_id }} \
-            --jobs-config cai_integration/jobs_config.yaml \
-            --job "${{ steps.target.outputs.job_name }}" \
-            --env "INFERENCE_URL=${{ github.event.inputs.inference_url }}" \
-            --env "DATASET_DIR=${{ github.event.inputs.dataset_dir }}"
-          echo "Locust application deployed"
-
-      - name: Create deployment summary
-        if: always()
-        run: |
-          echo "## Locust Benchmark Deployment" >> $GITHUB_STEP_SUMMARY
-          echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Project ID**: ${{ needs.setup-project.outputs.project_id }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
-          echo "- **App Type**: ${{ github.event.inputs.app_type }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Inference URL**: ${{ github.event.inputs.inference_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Dataset Dir**: ${{ github.event.inputs.dataset_dir }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: ${{ github.ref }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Force Rebuild**: ${{ github.event.inputs.force_rebuild || 'false' }}" >> $GITHUB_STEP_SUMMARY
+  # Locust applications are started from the CAI UI with INFERENCE_URL
+  # set at runtime. No trigger-app job needed here.
