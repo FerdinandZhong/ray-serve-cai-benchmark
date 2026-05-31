@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Evaluation Platform</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black:       #000000;
+  --near-black:  #1d1d1f;
+  --light-gray:  #f5f5f7;
+  --white:       #ffffff;
+  --blue:        #0071e3;
+  --blue-dark:   #0066cc;
+  --blue-bright: #2997ff;
+  --dark-card:   #272729;
+  --dark-card-2: #2a2a2d;
+  --text-secondary: rgba(0,0,0,0.48);
+  --text-body:   rgba(0,0,0,0.8);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: var(--light-gray);
+  color: var(--near-black);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Navigation ───────────────────────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 48px;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 32px;
+}
+.nav-brand {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.374px;
+  flex: 1;
+}
+.nav-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+.nav-links a {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  letter-spacing: -0.08px;
+  transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--white); }
+.nav-phoenix {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--blue-bright);
+  text-decoration: none;
+  letter-spacing: -0.08px;
+  border: 1px solid rgba(41,151,255,0.4);
+  padding: 4px 12px;
+  border-radius: 980px;
+  transition: background 0.15s;
+}
+.nav-phoenix:hover { background: rgba(41,151,255,0.1); }
+.nav-status {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #30d158;
+  flex-shrink: 0;
+}
+.nav-status.offline { background: #ff453a; }
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+section {
+  width: 100%;
+  padding: 80px 0;
+}
+.section-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+section.dark { background: var(--black); color: var(--white); }
+section.light { background: var(--light-gray); color: var(--near-black); }
+
+/* ── Hero ─────────────────────────────────────────────────────────────────── */
+.hero {
+  background: var(--black);
+  text-align: center;
+  padding: 120px 24px 100px;
+}
+.hero h1 {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  font-size: clamp(40px, 6vw, 56px);
+  font-weight: 600;
+  line-height: 1.07;
+  letter-spacing: -0.28px;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+.hero p {
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1.19;
+  letter-spacing: 0.231px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 40px;
+}
+.hero-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 980px;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s, background 0.15s;
+  border: 1px solid transparent;
+}
+.btn-pill.primary { background: var(--blue); color: var(--white); }
+.btn-pill.primary:hover { opacity: 0.88; }
+.btn-pill.outline { background: transparent; color: var(--white); border-color: rgba(255,255,255,0.4); }
+.btn-pill.outline:hover { background: rgba(255,255,255,0.08); }
+
+/* ── Section headings ─────────────────────────────────────────────────────── */
+.section-heading {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 600;
+  line-height: 1.10;
+  letter-spacing: -0.28px;
+  margin-bottom: 8px;
+}
+.section-heading.light { color: var(--near-black); }
+.section-heading.dark { color: var(--white); }
+.section-sub {
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.374px;
+  color: var(--text-body);
+  margin-bottom: 40px;
+}
+.section-sub.dark { color: rgba(255,255,255,0.6); }
+
+/* ── Form controls ────────────────────────────────────────────────────────── */
+.form-group { margin-bottom: 20px; }
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.224px;
+  color: var(--near-black);
+  margin-bottom: 6px;
+}
+.dark label { color: rgba(255,255,255,0.7); }
+input[type="text"], input[type="url"], input[type="number"], select, textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 17px;
+  font-family: inherit;
+  letter-spacing: -0.374px;
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 11px;
+  color: var(--near-black);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(0,113,227,0.15);
+}
+.dark input, .dark select, .dark textarea {
+  background: #1c1c1e;
+  border-color: rgba(255,255,255,0.12);
+  color: var(--white);
+}
+.dark input:focus, .dark select:focus, .dark textarea:focus {
+  border-color: var(--blue-bright);
+  box-shadow: 0 0 0 3px rgba(41,151,255,0.2);
+}
+.input-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: -0.12px;
+  margin-top: 5px;
+}
+.dark .input-hint { color: rgba(255,255,255,0.35); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.374px;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, background 0.15s;
+  font-family: inherit;
+}
+.btn-primary { background: var(--blue); color: var(--white); }
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-secondary {
+  background: var(--near-black);
+  color: var(--white);
+}
+.btn-secondary:hover { opacity: 0.8; }
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+/* ── Metrics checkboxes ───────────────────────────────────────────────────── */
+.metrics-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.metric-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.12);
+  cursor: pointer;
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.metric-chip input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; }
+.metric-chip:has(input:checked) {
+  border-color: var(--blue);
+  background: rgba(0,113,227,0.06);
+}
+.metric-chip label { margin: 0; font-weight: 400; cursor: pointer; }
+
+/* ── Dataset radio cards ──────────────────────────────────────────────────── */
+.dataset-radio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.dataset-radio-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.dataset-radio-card:has(input:checked) {
+  border-color: var(--blue);
+  background: rgba(0,113,227,0.04);
+}
+.dataset-radio-card input { accent-color: var(--blue); }
+.dataset-radio-card .ds-name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.224px;
+  color: var(--near-black);
+}
+.dataset-radio-card .ds-desc {
+  font-size: 12px;
+  letter-spacing: -0.12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ── Jobs table ───────────────────────────────────────────────────────────── */
+.jobs-table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  letter-spacing: -0.224px;
+}
+th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+.progress-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 80px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--blue-bright);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 980px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.status-pending  { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+.status-running  { background: rgba(41,151,255,0.18); color: var(--blue-bright); }
+.status-completed{ background: rgba(48,209,88,0.18);  color: #30d158; }
+.status-failed   { background: rgba(255,69,58,0.18);  color: #ff453a; }
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: rgba(255,255,255,0.3);
+  font-size: 14px;
+}
+
+/* ── Dataset cards ────────────────────────────────────────────────────────── */
+.dataset-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.dataset-card {
+  background: var(--white);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: rgba(0,0,0,0.22) 3px 5px 30px 0px;
+}
+.dataset-card .dc-name {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.231px;
+  color: var(--near-black);
+  margin-bottom: 6px;
+}
+.dataset-card .dc-desc {
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  color: var(--text-body);
+  line-height: 1.43;
+  margin-bottom: 16px;
+}
+.dataset-card .dc-meta {
+  font-size: 12px;
+  letter-spacing: -0.12px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.dataset-card .dc-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.uploaded-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #30d158;
+}
+
+/* ── Metric config panel ──────────────────────────────────────────────────── */
+.metric-config-panel {
+  margin-top: 14px;
+  padding: 18px 20px;
+  background: var(--white);
+  border: 1px solid rgba(0,113,227,0.25);
+  border-radius: 8px;
+  display: none;
+}
+.metric-config-panel.visible { display: block; }
+.metric-config-panel .config-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 12px;
+}
+.metric-config-panel .form-row { margin-bottom: 0; }
+
+/* ── Utility ──────────────────────────────────────────────────────────────── */
+.notice {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  margin-bottom: 20px;
+}
+.notice-info { background: rgba(0,113,227,0.1); color: var(--blue); border: 1px solid rgba(0,113,227,0.2); }
+.notice-success { background: rgba(48,209,88,0.1); color: #1a8f39; border: 1px solid rgba(48,209,88,0.2); }
+.notice-error { background: rgba(255,69,58,0.1); color: #c0392b; border: 1px solid rgba(255,69,58,0.2); }
+.notice.dark-notice { color: var(--white); }
+.notice-success.dark-notice { background: rgba(48,209,88,0.15); border-color: rgba(48,209,88,0.3); color: #30d158; }
+.notice-error.dark-notice { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.3); color: #ff453a; }
+.hidden { display: none; }
+
+footer {
+  background: var(--near-black);
+  padding: 32px 24px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: -0.12px;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <span class="nav-brand">Model Evaluation</span>
+  <ul class="nav-links">
+    <li><a href="#evaluate">Evaluate</a></li>
+    <li><a href="#jobs">Jobs</a></li>
+    <li><a href="#datasets">Datasets</a></li>
+  </ul>
+  <a id="phoenix-link" class="nav-phoenix" href="/" target="_blank">Open Phoenix ↗</a>
+  <div id="nav-status" class="nav-status offline" title="Phoenix status"></div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <h1>Evaluate Your Model</h1>
+  <p>Accuracy benchmarks for LLM inference endpoints.<br>Results tracked in Arize Phoenix.</p>
+  <div class="hero-ctas">
+    <a href="#evaluate" class="btn-pill primary">Run Evaluation</a>
+    <a href="/" target="_blank" class="btn-pill outline">Open Phoenix ↗</a>
+  </div>
+</section>
+
+<!-- ── Run Evaluation ──────────────────────────────────────────────────────── -->
+<section class="light" id="evaluate">
+  <div class="section-inner">
+    <h2 class="section-heading light">Run Evaluation</h2>
+    <p class="section-sub">Point to any OpenAI-compatible inference endpoint and select your benchmark configuration.</p>
+
+    <div id="eval-notice" class="hidden"></div>
+
+    <div class="form-group">
+      <label for="endpoint-url">Inference Endpoint URL</label>
+      <input type="url" id="endpoint-url" placeholder="https://your-model-endpoint.example.com" autocomplete="off">
+      <div class="input-hint">OpenAI-compatible base URL. Accepts <code>https://host</code> or <code>https://host/v1</code></div>
+    </div>
+
+    <div class="form-group">
+      <label for="api-key">API Key</label>
+      <input type="password" id="api-key" placeholder="sk-… (leave blank if not required)" autocomplete="off">
+      <div class="input-hint">Passed as the Bearer token to the inference endpoint</div>
+    </div>
+
+    <div class="form-group">
+      <label>Dataset</label>
+      <div id="dataset-radio-grid" class="dataset-radio-grid">
+        <div class="dataset-radio-card">
+          <input type="radio" name="dataset" value="spider" id="ds-loading" checked>
+          <label for="ds-loading" style="cursor:pointer">
+            <div class="ds-name">Loading…</div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="system-prompt">System Prompt <span style="font-weight:400;color:var(--text-secondary);font-size:13px">(auto-filled from dataset default — editable)</span></label>
+      <textarea id="system-prompt" rows="7" style="font-family:monospace;font-size:12px;resize:vertical;line-height:1.5" placeholder="Enter system prompt. Use {schema} as a placeholder for the database schema."></textarea>
+      <div class="input-hint">Use <code>{schema}</code> as a placeholder — substituted with each example's schema at runtime.</div>
+    </div>
+
+    <div class="form-group">
+      <label>Metrics</label>
+      <div id="metrics-grid" class="metrics-grid"></div>
+      <div id="metric-configs"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="model-name">Model Name</label>
+        <input type="text" id="model-name" value="default" placeholder="default">
+        <div class="input-hint">Passed as <code>model</code> in the API call</div>
+      </div>
+      <div class="form-group">
+        <label for="max-tokens">Max Output Tokens</label>
+        <input type="number" id="max-tokens" value="512" min="64" max="32768">
+        <div class="input-hint">Max tokens in the model's response</div>
+      </div>
+      <div class="form-group">
+        <label for="concurrency">Concurrency</label>
+        <input type="number" id="concurrency" value="4" min="1" max="32">
+        <div class="input-hint">Parallel API requests</div>
+      </div>
+      <div class="form-group">
+        <label for="max-samples">Max Samples</label>
+        <input type="number" id="max-samples" value="0" min="0">
+        <div class="input-hint">0 = evaluate all examples</div>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:4px">
+      <label class="metric-chip" title="Strip &lt;think&gt;…&lt;/think&gt; reasoning blocks before evaluating the SQL output">
+        <input type="checkbox" id="is-reasoning">
+        <span>Reasoning model (strip &lt;think&gt; blocks)</span>
+      </label>
+    </div>
+
+    <button class="btn btn-primary" id="run-btn" onclick="startEvaluation()">
+      Run Evaluation
+    </button>
+  </div>
+</section>
+
+<!-- ── Jobs ────────────────────────────────────────────────────────────────── -->
+<section class="dark" id="jobs">
+  <div class="section-inner">
+    <h2 class="section-heading dark">Evaluation Jobs</h2>
+    <p class="section-sub dark">Live progress updates every 3 seconds.</p>
+
+    <div class="jobs-table-wrap">
+      <table id="jobs-table">
+        <thead>
+          <tr>
+            <th>Job ID</th>
+            <th>Dataset</th>
+            <th>Model</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Accuracy</th>
+            <th>Started</th>
+          </tr>
+        </thead>
+        <tbody id="jobs-tbody">
+          <tr><td colspan="7" class="empty-state">No jobs yet — run an evaluation above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ── Datasets ─────────────────────────────────────────────────────────────── -->
+<section class="light" id="datasets">
+  <div class="section-inner">
+    <h2 class="section-heading light">Datasets</h2>
+    <p class="section-sub">Bundled evaluation datasets. Upload them to Phoenix to browse examples and annotate.</p>
+    <div id="dataset-cards" class="dataset-cards">
+      <div style="color:var(--text-secondary);font-size:14px">Loading datasets…</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Upload Dataset ──────────────────────────────────────────────────────── -->
+<section class="dark" id="upload-dataset">
+  <div class="section-inner">
+    <h2 class="section-heading dark">Upload Dataset</h2>
+    <p class="section-sub dark">Add a custom evaluation dataset. JSON format: array of objects with <code>question</code>, <code>query</code>, <code>db_id</code> fields.</p>
+
+    <div id="upload-notice" class="hidden"></div>
+
+    <div class="form-group">
+      <label for="upload-name">Dataset Name</label>
+      <input type="text" id="upload-name" placeholder="my_custom_dataset">
+    </div>
+    <div class="form-group">
+      <label for="upload-desc">Description</label>
+      <input type="text" id="upload-desc" placeholder="Brief description of this dataset">
+    </div>
+    <div class="form-group">
+      <label for="upload-sys-prompt">System Prompt <span style="font-weight:400;color:rgba(255,255,255,0.45);font-size:13px">(optional)</span></label>
+      <textarea id="upload-sys-prompt" rows="5" style="font-family:monospace;font-size:12px;resize:vertical;line-height:1.5;background:rgba(255,255,255,0.06);color:#fff;border:1px solid rgba(255,255,255,0.15)" placeholder="Enter system prompt. Use {schema} as a placeholder for the database schema."></textarea>
+      <div class="input-hint" style="color:rgba(255,255,255,0.4)">Use <code>{schema}</code> as a placeholder — substituted with each example's schema at runtime.</div>
+    </div>
+    <div class="form-group">
+      <label for="upload-file">JSON File</label>
+      <input type="text" id="upload-file" placeholder='Paste JSON here or load file below' style="font-family:monospace;font-size:13px">
+      <div style="margin-top:8px">
+        <input type="file" id="upload-file-input" accept=".json" onchange="loadFile(this)" style="width:auto;background:transparent;border:none;padding:0;font-size:13px;color:rgba(255,255,255,0.6)">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="uploadDataset()">Upload Dataset</button>
+  </div>
+</section>
+
+<!-- ── Define Metric ──────────────────────────────────────────────────────── -->
+<section class="light" id="define-metric">
+  <div class="section-inner">
+    <h2 class="section-heading light">Define Metric</h2>
+    <p class="section-sub">Register a new evaluation metric by name. Built-in Python implementations are added in code; this registers the metadata.</p>
+
+    <div id="metric-notice" class="hidden"></div>
+
+    <div class="form-group">
+      <label for="metric-name">Metric Name</label>
+      <input type="text" id="metric-name" placeholder="exact_match">
+    </div>
+    <div class="form-group">
+      <label for="metric-desc">Description</label>
+      <input type="text" id="metric-desc" placeholder="Exact string match between predicted and gold SQL">
+    </div>
+    <button class="btn btn-secondary" onclick="defineMetric()">Define Metric</button>
+  </div>
+</section>
+
+<footer>
+  Model Evaluation Platform &nbsp;·&nbsp; Powered by Arize Phoenix &nbsp;·&nbsp; ray-serve-cai-bench
+</footer>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let _datasets = [];
+let _metrics  = [];
+let _jobs     = [];
+
+// ── Init ───────────────────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([fetchHealth(), fetchDatasets(), fetchMetrics()]);
+  setInterval(fetchJobs, 3000);
+  fetchJobs();
+}
+
+// ── Health ─────────────────────────────────────────────────────────────────
+async function fetchHealth() {
+  try {
+    const r = await fetch('api/health');
+    const d = await r.json();
+    const el = document.getElementById('nav-status');
+    const link = document.getElementById('phoenix-link');
+    if (d.phoenix_ready) {
+      el.classList.remove('offline');
+      link.title = 'Phoenix is running';
+    } else {
+      el.classList.add('offline');
+      link.title = 'Phoenix starting…';
+    }
+  } catch (_) {}
+}
+setInterval(fetchHealth, 10000);
+
+// ── Datasets ───────────────────────────────────────────────────────────────
+async function fetchDatasets() {
+  try {
+    const r = await fetch('api/datasets');
+    const d = await r.json();
+    _datasets = d.datasets || [];
+    renderDatasetRadios();
+    renderDatasetCards();
+  } catch (_) {}
+}
+
+function renderDatasetRadios() {
+  const grid = document.getElementById('dataset-radio-grid');
+  if (!_datasets.length) {
+    grid.innerHTML = '<div style="color:var(--text-secondary);font-size:14px">No datasets found.</div>';
+    return;
+  }
+  grid.innerHTML = _datasets.map((ds, i) => `
+    <label class="dataset-radio-card" for="ds-${ds.id}">
+      <input type="radio" name="dataset" value="${ds.id}" id="ds-${ds.id}" ${i === 0 ? 'checked' : ''}>
+      <div class="ds-name">${esc(ds.name)}</div>
+      <div class="ds-desc">${esc(ds.description || '')}</div>
+      <div class="ds-desc" style="color:var(--text-secondary)">${ds.size} examples</div>
+    </label>
+  `).join('');
+
+  // Auto-fill system prompt when dataset changes
+  document.querySelectorAll('input[name="dataset"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const ds = _datasets.find(d => d.id === this.value);
+      if (ds) document.getElementById('system-prompt').value = ds.system_prompt || '';
+    });
+  });
+  // Populate for initial selection
+  if (_datasets[0]) document.getElementById('system-prompt').value = _datasets[0].system_prompt || '';
+}
+
+function renderDatasetCards() {
+  const container = document.getElementById('dataset-cards');
+  if (!_datasets.length) {
+    container.innerHTML = '<div style="color:var(--text-secondary);font-size:14px">No datasets found.</div>';
+    return;
+  }
+  container.innerHTML = _datasets.map(ds => `
+    <div class="dataset-card">
+      <div class="dc-name">${esc(ds.name)}</div>
+      <div class="dc-desc">${esc(ds.description || '')}</div>
+      <div class="dc-meta">
+        ${ds.size} examples &nbsp;·&nbsp; ${esc(ds.task_type || 'text2sql')}
+        ${ds.hf_id ? ` &nbsp;·&nbsp; <span style="color:var(--blue-dark)">${esc(ds.hf_id)}</span>` : ''}
+      </div>
+      <div class="dc-actions">
+        ${ds.phoenix_uploaded
+          ? '<span class="uploaded-badge">✓ In Phoenix</span>'
+          : `<button class="btn btn-primary btn-sm" onclick="uploadToPhoenix('${ds.id}', this)">Upload to Phoenix</button>`
+        }
+      </div>
+    </div>
+  `).join('');
+}
+
+async function uploadToPhoenix(datasetId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Uploading…';
+  try {
+    const r = await fetch(`api/datasets/${datasetId}/upload`, { method: 'POST' });
+    const d = await r.json();
+    if (r.ok) {
+      btn.outerHTML = '<span class="uploaded-badge">✓ Uploaded</span>';
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Upload to Phoenix';
+      alert('Upload failed: ' + (d.error || 'unknown error'));
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Upload to Phoenix';
+    alert('Upload failed: ' + e.message);
+  }
+}
+
+// ── Metrics ────────────────────────────────────────────────────────────────
+async function fetchMetrics() {
+  try {
+    const r = await fetch('api/metrics');
+    const d = await r.json();
+    _metrics = d.metrics || [];
+    renderMetrics();
+  } catch (_) {}
+}
+
+function renderMetrics() {
+  const grid = document.getElementById('metrics-grid');
+  const configs = document.getElementById('metric-configs');
+  grid.innerHTML = _metrics.map((m, i) => `
+    <label class="metric-chip" title="${esc(m.description || '')}">
+      <input type="checkbox" name="metric" value="${m.name}" ${i === 0 ? 'checked' : ''}
+        ${m.requires_config ? `onchange="toggleMetricConfig('${m.name}', this.checked)"` : ''}>
+      <span>${esc(m.name)}</span>
+    </label>
+  `).join('');
+  configs.innerHTML = _metrics.filter(m => m.requires_config).map(m => `
+    <div id="config-${m.name}" class="metric-config-panel">
+      <div class="config-title">${esc(m.name)} configuration</div>
+      <div class="form-row">
+        ${(m.config_fields || []).map(f => `
+          <div class="form-group">
+            <label for="cfg-${m.name}-${f.name}">${esc(f.label)}</label>
+            <input type="${f.type === 'password' ? 'password' : f.type === 'url' ? 'url' : 'text'}"
+              id="cfg-${m.name}-${f.name}" placeholder="${esc(f.placeholder || '')}">
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+function toggleMetricConfig(name, checked) {
+  const panel = document.getElementById('config-' + name);
+  if (panel) panel.classList.toggle('visible', checked);
+}
+
+// ── Jobs ───────────────────────────────────────────────────────────────────
+async function fetchJobs() {
+  try {
+    const r = await fetch('api/jobs');
+    const d = await r.json();
+    _jobs = d.jobs || [];
+    renderJobs();
+  } catch (_) {}
+}
+
+function renderJobs() {
+  const tbody = document.getElementById('jobs-tbody');
+  if (!_jobs.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No jobs yet — run an evaluation above.</td></tr>';
+    return;
+  }
+  const sorted = [..._jobs].sort((a, b) => (b.started_at || 0) - (a.started_at || 0));
+  tbody.innerHTML = sorted.map(j => `
+    <tr>
+      <td><code style="font-size:12px;color:rgba(255,255,255,0.5)">${esc(j.id)}</code></td>
+      <td>${esc(j.dataset_id)}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(j.model_name)}">${esc(j.model_name)}</td>
+      <td><span class="status-badge status-${j.status}">${j.status}</span></td>
+      <td>
+        <div class="progress-bar"><div class="progress-fill" style="width:${j.progress}%"></div></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px">${j.completed_count}/${j.total}</div>
+      </td>
+      <td style="font-weight:600;color:${j.accuracy != null ? '#30d158' : 'rgba(255,255,255,0.3)'}">
+        ${j.accuracy != null ? (j.accuracy * 100).toFixed(1) + '%' : '—'}
+      </td>
+      <td style="font-size:12px;color:rgba(255,255,255,0.4)">${j.started_at ? fmtTime(j.started_at) : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ── Evaluate ───────────────────────────────────────────────────────────────
+async function startEvaluation() {
+  const url = document.getElementById('endpoint-url').value.trim();
+  if (!url) { showNotice('eval-notice', 'error', 'Please enter an inference endpoint URL.'); return; }
+
+  const datasetEl = document.querySelector('input[name="dataset"]:checked');
+  const dataset_id = datasetEl ? datasetEl.value : 'spider';
+
+  const metrics = [...document.querySelectorAll('input[name="metric"]:checked')].map(el => el.value);
+  if (!metrics.length) { showNotice('eval-notice', 'error', 'Select at least one metric.'); return; }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.textContent = 'Starting…';
+  hideNotice('eval-notice');
+
+  const metric_config = {};
+  _metrics.filter(m => m.requires_config).forEach(m => {
+    const cfg = {};
+    (m.config_fields || []).forEach(f => {
+      const el = document.getElementById('cfg-' + m.name + '-' + f.name);
+      if (el && el.value.trim()) cfg[f.name] = el.value.trim();
+    });
+    if (Object.keys(cfg).length) metric_config[m.name] = cfg;
+  });
+
+  const api_key = document.getElementById('api-key').value.trim();
+  const payload = {
+    endpoint_url: url,
+    dataset_id,
+    metrics,
+    model_name: document.getElementById('model-name').value.trim() || 'default',
+    max_tokens: parseInt(document.getElementById('max-tokens').value) || 512,
+    concurrency: parseInt(document.getElementById('concurrency').value) || 4,
+    max_samples: parseInt(document.getElementById('max-samples').value) || 0,
+    temperature: 0.0,
+    timeout: 60,
+    is_reasoning: document.getElementById('is-reasoning').checked,
+    system_prompt: document.getElementById('system-prompt').value.trim(),
+    metric_config,
+    ...(api_key && { api_key }),
+  };
+
+  try {
+    const r = await fetch('api/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      showNotice('eval-notice', 'success', `Job started: ${d.job_id}. Scroll down to see progress.`);
+      fetchJobs();
+      window.location.hash = '#jobs';
+    } else {
+      showNotice('eval-notice', 'error', d.error || 'Failed to start job.');
+    }
+  } catch (e) {
+    showNotice('eval-notice', 'error', e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Evaluation';
+  }
+}
+
+// ── Upload dataset ─────────────────────────────────────────────────────────
+function loadFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('upload-file').value = e.target.result; };
+  reader.readAsText(file);
+}
+
+async function uploadDataset() {
+  const name = document.getElementById('upload-name').value.trim();
+  const desc = document.getElementById('upload-desc').value.trim();
+  const raw  = document.getElementById('upload-file').value.trim();
+  if (!name) { showNotice('upload-notice', 'error', 'Dataset name is required.', true); return; }
+  if (!raw)  { showNotice('upload-notice', 'error', 'Paste or load a JSON file.', true); return; }
+
+  let records;
+  try { records = JSON.parse(raw); } catch (_) {
+    showNotice('upload-notice', 'error', 'Invalid JSON.', true); return;
+  }
+  if (!Array.isArray(records)) {
+    showNotice('upload-notice', 'error', 'JSON must be an array of records.', true); return;
+  }
+
+  try {
+    const r = await fetch('api/datasets/upload-file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description: desc, system_prompt: document.getElementById('upload-sys-prompt').value.trim(), records }),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      showNotice('upload-notice', 'success', `Dataset "${name}" saved (${d.size} examples). Reload to see it.`, true);
+      fetchDatasets();
+    } else {
+      showNotice('upload-notice', 'error', d.error || 'Upload failed.', true);
+    }
+  } catch (e) {
+    showNotice('upload-notice', 'error', e.message, true);
+  }
+}
+
+// ── Define metric ──────────────────────────────────────────────────────────
+async function defineMetric() {
+  const name = document.getElementById('metric-name').value.trim();
+  const desc = document.getElementById('metric-desc').value.trim();
+  if (!name) { showNotice('metric-notice', 'info', 'Metric name is required.'); return; }
+
+  try {
+    const r = await fetch('api/metrics/define', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description: desc }),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      showNotice('metric-notice', 'success', `Metric "${name}" defined. ${d.note || ''}`);
+      fetchMetrics();
+    } else {
+      showNotice('metric-notice', 'error', d.error || 'Failed to define metric.');
+    }
+  } catch (e) {
+    showNotice('metric-notice', 'error', e.message);
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtTime(ts) {
+  return new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function showNotice(id, type, msg, dark = false) {
+  const el = document.getElementById(id);
+  el.className = `notice notice-${type}${dark ? ' dark-notice' : ''}`;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function hideNotice(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

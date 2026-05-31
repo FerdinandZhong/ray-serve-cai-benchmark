@@ -24,6 +24,26 @@ jobs:
     environment:
       FORCE_REINSTALL: "false"
 
+  # ── Text-to-SQL Accuracy Benchmark (Spider) ─────────────────────────────
+  # Evaluates model SQL generation via execution accuracy.
+  # Set INFERENCE_URL to the OpenAI-compatible endpoint in CAI UI.
+  text2sql_benchmark:
+    name: "Benchmark - Text2SQL Accuracy (Spider)"
+    script: "cai_integration/run_text2sql_benchmark.py"
+    kernel: "python3"
+    cpu: 4
+    memory: 8
+    gpu: 0
+    timeout: 7200
+    parent_job_key: setup_environment
+    environment:
+      INFERENCE_URL: ""
+      MODEL_NAME: "default"
+      MAX_SAMPLES: "0"
+      CONCURRENCY: "4"
+      TIMEOUT: "60"
+      TEMPERATURE: "0.0"
+
 applications:
   # ── Locust YOLO Application ────────────────────────────────────────────
   # Interactive web UI for YOLO object detection load testing.

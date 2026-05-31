@@ -1,0 +1,134 @@
+[
+  {
+    "query_id": "Q1",
+    "db_id": "tpch",
+    "question": "Summarize total quantity, extended price, discounted extended price, total charge with tax, and averages for quantity, price, and discount grouped by return flag and line status, for all line items shipped on or before September 2, 1998. Order by return flag and line status.",
+    "query": "SELECT\n    l_returnflag,\n    l_linestatus,\n    sum(l_quantity) AS sum_qty,\n    sum(l_extendedprice) AS sum_base_price,\n    sum(l_extendedprice * (1 - l_discount)) AS sum_disc_price,\n    sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) AS sum_charge,\n    avg(l_quantity) AS avg_qty,\n    avg(l_extendedprice) AS avg_price,\n    avg(l_discount) AS avg_disc,\n    count(*) AS count_order\nFROM lineitem\nWHERE l_shipdate <= DATE '1998-09-02'\nGROUP BY l_returnflag, l_linestatus\nORDER BY l_returnflag, l_linestatus"
+  },
+  {
+    "query_id": "Q2",
+    "db_id": "tpch",
+    "question": "Find the account balance, name, nation, part key, manufacturer, address, phone, and comment for suppliers in Europe offering size 15 brass parts at the minimum supply cost in Europe. Return the top 100 results ordered by account balance descending, then nation name, supplier name, and part key.",
+    "query": "SELECT s_acctbal, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment\nFROM part, supplier, partsupp, nation, region\nWHERE p_partkey = ps_partkey\n  AND s_suppkey = ps_suppkey\n  AND p_size = 15\n  AND p_type LIKE '%BRASS'\n  AND s_nationkey = n_nationkey\n  AND n_regionkey = r_regionkey\n  AND r_name = 'EUROPE'\n  AND ps_supplycost = (\n    SELECT min(ps_supplycost)\n    FROM partsupp, supplier, nation, region\n    WHERE p_partkey = ps_partkey\n      AND s_suppkey = ps_suppkey\n      AND s_nationkey = n_nationkey\n      AND n_regionkey = r_regionkey\n      AND r_name = 'EUROPE'\n  )\nORDER BY s_acctbal DESC, n_name, s_name, p_partkey\nLIMIT 100"
+  },
+  {
+    "query_id": "Q3",
+    "db_id": "tpch",
+    "question": "Find the top 10 unshipped orders with the highest revenue for customers in the BUILDING segment where the order was placed before March 15, 1995 and the line item was shipped after that date. Report order key, revenue, order date, and shipping priority.",
+    "query": "SELECT\n    l_orderkey,\n    sum(l_extendedprice * (1 - l_discount)) AS revenue,\n    o_orderdate,\n    o_shippriority\nFROM customer, orders, lineitem\nWHERE c_mktsegment = 'BUILDING'\n  AND c_custkey = o_custkey\n  AND l_orderkey = o_orderkey\n  AND o_orderdate < DATE '1995-03-15'\n  AND l_shipdate > DATE '1995-03-15'\nGROUP BY l_orderkey, o_orderdate, o_shippriority\nORDER BY revenue DESC, o_orderdate\nLIMIT 10"
+  },
+  {
+    "query_id": "Q4",
+    "db_id": "tpch",
+    "question": "Count the number of orders per priority level for orders placed in the third quarter of 1993 where at least one line item was received after its committed date. Order by order priority.",
+    "query": "SELECT o_orderpriority, count(*) AS order_count\nFROM orders\nWHERE o_orderdate >= DATE '1993-07-01'\n  AND o_orderdate < DATE '1993-10-01'\n  AND EXISTS (\n    SELECT *\n    FROM lineitem\n    WHERE l_orderkey = o_orderkey\n      AND l_commitdate < l_receiptdate\n  )\nGROUP BY o_orderpriority\nORDER BY o_orderpriority"
+  },
+  {
+    "query_id": "Q5",
+    "db_id": "tpch",
+    "question": "List the revenue generated from customers and suppliers in the same nation within the ASIA region for orders placed in 1994. Group by nation name and order by revenue descending.",
+    "query": "SELECT n_name, sum(l_extendedprice * (1 - l_discount)) AS revenue\nFROM customer, orders, lineitem, supplier, nation, region\nWHERE c_custkey = o_custkey\n  AND l_orderkey = o_orderkey\n  AND l_suppkey = s_suppkey\n  AND c_nationkey = s_nationkey\n  AND s_nationkey = n_nationkey\n  AND n_regionkey = r_regionkey\n  AND r_name = 'ASIA'\n  AND o_orderdate >= DATE '1994-01-01'\n  AND o_orderdate < DATE '1995-01-01'\nGROUP BY n_name\nORDER BY revenue DESC"
+  },
+  {
+    "query_id": "Q6",
+    "db_id": "tpch",
+    "question": "What is the revenue increase if line items with a discount between 5% and 7% inclusive and quantity less than 24 were eliminated, for shipments in 1994?",
+    "query": "SELECT sum(l_extendedprice * l_discount) AS revenue\nFROM lineitem\nWHERE l_shipdate >= DATE '1994-01-01'\n  AND l_shipdate < DATE '1995-01-01'\n  AND l_discount BETWEEN 0.05 AND 0.07\n  AND l_quantity < 24"
+  },
+  {
+    "query_id": "Q7",
+    "db_id": "tpch",
+    "question": "Find the shipping volume between France and Germany in both directions for line items shipped between 1995 and 1996. Report supplier nation, customer nation, year, and revenue, ordered by supplier nation, customer nation, and year.",
+    "query": "SELECT\n    supp_nation,\n    cust_nation,\n    l_year,\n    sum(volume) AS revenue\nFROM (\n    SELECT\n        n1.n_name AS supp_nation,\n        n2.n_name AS cust_nation,\n        year(l_shipdate) AS l_year,\n        l_extendedprice * (1 - l_discount) AS volume\n    FROM supplier, lineitem, orders, customer, nation n1, nation n2\n    WHERE s_suppkey = l_suppkey\n      AND o_orderkey = l_orderkey\n      AND c_custkey = o_custkey\n      AND s_nationkey = n1.n_nationkey\n      AND c_nationkey = n2.n_nationkey\n      AND (\n        (n1.n_name = 'FRANCE' AND n2.n_name = 'GERMANY')\n        OR (n1.n_name = 'GERMANY' AND n2.n_name = 'FRANCE')\n      )\n      AND l_shipdate BETWEEN DATE '1995-01-01' AND DATE '1996-12-31'\n) AS shipping\nGROUP BY supp_nation, cust_nation, l_year\nORDER BY supp_nation, cust_nation, l_year"
+  },
+  {
+    "query_id": "Q8",
+    "db_id": "tpch",
+    "question": "Compute the market share of Brazil in the AMERICA region for ECONOMY ANODIZED STEEL parts ordered in 1995 and 1996, showing the percentage of total revenue by year.",
+    "query": "SELECT\n    o_year,\n    sum(CASE WHEN nation = 'BRAZIL' THEN volume ELSE 0 END) / sum(volume) AS mkt_share\nFROM (\n    SELECT\n        year(o_orderdate) AS o_year,\n        l_extendedprice * (1 - l_discount) AS volume,\n        n2.n_name AS nation\n    FROM part, supplier, lineitem, orders, customer, nation n1, nation n2, region\n    WHERE p_partkey = l_partkey\n      AND s_suppkey = l_suppkey\n      AND l_orderkey = o_orderkey\n      AND o_custkey = c_custkey\n      AND c_nationkey = n1.n_nationkey\n      AND n1.n_regionkey = r_regionkey\n      AND r_name = 'AMERICA'\n      AND s_nationkey = n2.n_nationkey\n      AND o_orderdate BETWEEN DATE '1995-01-01' AND DATE '1996-12-31'\n      AND p_type = 'ECONOMY ANODIZED STEEL'\n) AS all_nations\nGROUP BY o_year\nORDER BY o_year"
+  },
+  {
+    "query_id": "Q9",
+    "db_id": "tpch",
+    "question": "Compute the profit for each nation and year for all parts containing 'green' in their name. Report nation, year, and sum of profit, ordered by nation and year descending.",
+    "query": "SELECT nation, o_year, sum(amount) AS sum_profit\nFROM (\n    SELECT\n        n_name AS nation,\n        year(o_orderdate) AS o_year,\n        l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity AS amount\n    FROM part, supplier, lineitem, partsupp, orders, nation\n    WHERE s_suppkey = l_suppkey\n      AND ps_suppkey = l_suppkey\n      AND ps_partkey = l_partkey\n      AND p_partkey = l_partkey\n      AND o_orderkey = l_orderkey\n      AND s_nationkey = n_nationkey\n      AND p_name LIKE '%green%'\n) AS profit\nGROUP BY nation, o_year\nORDER BY nation, o_year DESC"
+  },
+  {
+    "query_id": "Q10",
+    "db_id": "tpch",
+    "question": "List the top 20 customers who returned items in Q4 1993. Show customer key, name, revenue from returned items, account balance, nation, address, phone, and comment, ordered by revenue descending.",
+    "query": "SELECT\n    c_custkey,\n    c_name,\n    sum(l_extendedprice * (1 - l_discount)) AS revenue,\n    c_acctbal,\n    n_name,\n    c_address,\n    c_phone,\n    c_comment\nFROM customer, orders, lineitem, nation\nWHERE c_custkey = o_custkey\n  AND l_orderkey = o_orderkey\n  AND o_orderdate >= DATE '1993-10-01'\n  AND o_orderdate < DATE '1994-01-01'\n  AND l_returnflag = 'R'\n  AND c_nationkey = n_nationkey\nGROUP BY c_custkey, c_name, c_acctbal, c_phone, n_name, c_address, c_comment\nORDER BY revenue DESC\nLIMIT 20"
+  },
+  {
+    "query_id": "Q11",
+    "db_id": "tpch",
+    "question": "Identify parts from German suppliers where the total available stock value exceeds 0.0001% of the total stock value supplied by all German suppliers. Order by total value descending.",
+    "query": "SELECT ps_partkey, sum(ps_supplycost * ps_availqty) AS value\nFROM partsupp, supplier, nation\nWHERE ps_suppkey = s_suppkey\n  AND s_nationkey = n_nationkey\n  AND n_name = 'GERMANY'\nGROUP BY ps_partkey\nHAVING sum(ps_supplycost * ps_availqty) > (\n    SELECT sum(ps_supplycost * ps_availqty) * 0.0001\n    FROM partsupp, supplier, nation\n    WHERE ps_suppkey = s_suppkey\n      AND s_nationkey = n_nationkey\n      AND n_name = 'GERMANY'\n)\nORDER BY value DESC"
+  },
+  {
+    "query_id": "Q12",
+    "db_id": "tpch",
+    "question": "Count high-priority and low-priority orders shipped by MAIL or SHIP in 1994 where receipt date exceeded commit date. Group by shipping mode, ordered by shipping mode.",
+    "query": "SELECT\n    l_shipmode,\n    sum(CASE WHEN o_orderpriority = '1-URGENT' OR o_orderpriority = '2-HIGH' THEN 1 ELSE 0 END) AS high_line_count,\n    sum(CASE WHEN o_orderpriority <> '1-URGENT' AND o_orderpriority <> '2-HIGH' THEN 1 ELSE 0 END) AS low_line_count\nFROM orders, lineitem\nWHERE o_orderkey = l_orderkey\n  AND l_shipmode IN ('MAIL', 'SHIP')\n  AND l_commitdate < l_receiptdate\n  AND l_shipdate < l_commitdate\n  AND l_receiptdate >= DATE '1994-01-01'\n  AND l_receiptdate < DATE '1995-01-01'\nGROUP BY l_shipmode\nORDER BY l_shipmode"
+  },
+  {
+    "query_id": "Q13",
+    "db_id": "tpch",
+    "question": "Count how many customers have each number of orders whose comments do not match 'special.*requests', including customers with zero such orders. Order by customer count descending, then order count descending.",
+    "query": "SELECT c_count, count(*) AS custdist\nFROM (\n    SELECT c_custkey, count(o_orderkey) AS c_count\n    FROM customer\n    LEFT OUTER JOIN orders ON c_custkey = o_custkey\n        AND o_comment NOT LIKE '%special%requests%'\n    GROUP BY c_custkey\n) AS c_orders\nGROUP BY c_count\nORDER BY custdist DESC, c_count DESC"
+  },
+  {
+    "query_id": "Q14",
+    "db_id": "tpch",
+    "question": "What percentage of revenue in September 1995 came from promotional parts whose type starts with PROMO?",
+    "query": "SELECT\n    100.00 * sum(CASE WHEN p_type LIKE 'PROMO%' THEN l_extendedprice * (1 - l_discount) ELSE 0 END) /\n    sum(l_extendedprice * (1 - l_discount)) AS promo_revenue\nFROM lineitem, part\nWHERE l_partkey = p_partkey\n  AND l_shipdate >= DATE '1995-09-01'\n  AND l_shipdate < DATE '1995-10-01'"
+  },
+  {
+    "query_id": "Q15",
+    "db_id": "tpch",
+    "question": "Find the supplier with the highest total revenue from line items shipped in Q1 1996. Report supplier key, name, address, phone, and total revenue.",
+    "query": "WITH revenue AS (\n    SELECT\n        l_suppkey AS supplier_no,\n        sum(l_extendedprice * (1 - l_discount)) AS total_revenue\n    FROM lineitem\n    WHERE l_shipdate >= DATE '1996-01-01'\n      AND l_shipdate < DATE '1996-04-01'\n    GROUP BY l_suppkey\n)\nSELECT s_suppkey, s_name, s_address, s_phone, total_revenue\nFROM supplier, revenue\nWHERE s_suppkey = supplier_no\n  AND total_revenue = (SELECT max(total_revenue) FROM revenue)\nORDER BY s_suppkey"
+  },
+  {
+    "query_id": "Q16",
+    "db_id": "tpch",
+    "question": "Count distinct suppliers for non-Brand#45, non-medium-polished parts with sizes 49, 14, 23, 45, 19, 3, 36, or 9, excluding suppliers with complaints in their comments. Report by brand, type, and size, ordered by supplier count descending.",
+    "query": "SELECT p_brand, p_type, p_size, count(DISTINCT ps_suppkey) AS supplier_cnt\nFROM partsupp, part\nWHERE p_partkey = ps_partkey\n  AND p_brand <> 'Brand#45'\n  AND p_type NOT LIKE 'MEDIUM POLISHED%'\n  AND p_size IN (49, 14, 23, 45, 19, 3, 36, 9)\n  AND ps_suppkey NOT IN (\n    SELECT s_suppkey\n    FROM supplier\n    WHERE s_comment LIKE '%Customer%Complaints%'\n  )\nGROUP BY p_brand, p_type, p_size\nORDER BY supplier_cnt DESC, p_brand, p_type, p_size"
+  },
+  {
+    "query_id": "Q17",
+    "db_id": "tpch",
+    "question": "What is the average yearly revenue lost from orders with quantities less than 20% of the average quantity for Brand#23 medium box parts?",
+    "query": "SELECT sum(l_extendedprice) / 7.0 AS avg_yearly\nFROM lineitem, part\nWHERE p_partkey = l_partkey\n  AND p_brand = 'Brand#23'\n  AND p_container = 'MED BOX'\n  AND l_quantity < (\n    SELECT 0.2 * avg(l_quantity)\n    FROM lineitem\n    WHERE l_partkey = p_partkey\n  )"
+  },
+  {
+    "query_id": "Q18",
+    "db_id": "tpch",
+    "question": "Find the top 100 customers with orders whose total quantity exceeds 300. Report customer name, customer key, order key, order date, total price, and summed quantity, ordered by total price descending then order date.",
+    "query": "SELECT c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice, sum(l_quantity)\nFROM customer, orders, lineitem\nWHERE o_orderkey IN (\n    SELECT l_orderkey\n    FROM lineitem\n    GROUP BY l_orderkey\n    HAVING sum(l_quantity) > 300\n)\nAND c_custkey = o_custkey\nAND o_orderkey = l_orderkey\nGROUP BY c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice\nORDER BY o_totalprice DESC, o_orderdate\nLIMIT 100"
+  },
+  {
+    "query_id": "Q19",
+    "db_id": "tpch",
+    "question": "Calculate total discounted revenue for air-shipped Brand#12 small parts (quantity 1-11, sizes 1-5), Brand#23 medium parts (quantity 10-20, sizes 1-10), and Brand#34 large parts (quantity 20-30, sizes 1-15), all with DELIVER IN PERSON instruction.",
+    "query": "SELECT sum(l_extendedprice * (1 - l_discount)) AS revenue\nFROM lineitem, part\nWHERE (\n    p_partkey = l_partkey\n    AND p_brand = 'Brand#12'\n    AND p_container IN ('SM CASE', 'SM BOX', 'SM TRUNK', 'SM PACK')\n    AND l_quantity >= 1 AND l_quantity <= 11\n    AND p_size BETWEEN 1 AND 5\n    AND l_shipmode IN ('AIR', 'AIR REG')\n    AND l_shipinstruct = 'DELIVER IN PERSON'\n) OR (\n    p_partkey = l_partkey\n    AND p_brand = 'Brand#23'\n    AND p_container IN ('MED BAG', 'MED BOX', 'MED PKG', 'MED PACK')\n    AND l_quantity >= 10 AND l_quantity <= 20\n    AND p_size BETWEEN 1 AND 10\n    AND l_shipmode IN ('AIR', 'AIR REG')\n    AND l_shipinstruct = 'DELIVER IN PERSON'\n) OR (\n    p_partkey = l_partkey\n    AND p_brand = 'Brand#34'\n    AND p_container IN ('LG CASE', 'LG BOX', 'LG TRUNK', 'LG PACK')\n    AND l_quantity >= 20 AND l_quantity <= 30\n    AND p_size BETWEEN 1 AND 15\n    AND l_shipmode IN ('AIR', 'AIR REG')\n    AND l_shipinstruct = 'DELIVER IN PERSON'\n)"
+  },
+  {
+    "query_id": "Q20",
+    "db_id": "tpch",
+    "question": "Find Canadian suppliers who have more than half their 1994 forest part inventory available for export. Report supplier name and address ordered by supplier name.",
+    "query": "SELECT s_name, s_address\nFROM supplier, nation\nWHERE s_suppkey IN (\n    SELECT ps_suppkey\n    FROM partsupp\n    WHERE ps_partkey IN (\n        SELECT p_partkey\n        FROM part\n        WHERE p_name LIKE 'forest%'\n    )\n    AND ps_availqty > (\n        SELECT 0.5 * sum(l_quantity)\n        FROM lineitem\n        WHERE l_partkey = ps_partkey\n          AND l_suppkey = ps_suppkey\n          AND l_shipdate >= DATE '1994-01-01'\n          AND l_shipdate < DATE '1995-01-01'\n    )\n)\nAND s_nationkey = n_nationkey\nAND n_name = 'CANADA'\nORDER BY s_name"
+  },
+  {
+    "query_id": "Q21",
+    "db_id": "tpch",
+    "question": "Find the top 100 Saudi Arabian suppliers whose line items caused orders to be stuck in failed status, where no other supplier for the same order also missed the deadline. Report supplier name and count of failing line items, ordered by count descending.",
+    "query": "SELECT s_name, count(*) AS numwait\nFROM supplier, lineitem l1, orders, nation\nWHERE s_suppkey = l1.l_suppkey\n  AND o_orderkey = l1.l_orderkey\n  AND o_orderstatus = 'F'\n  AND l1.l_receiptdate > l1.l_commitdate\n  AND EXISTS (\n    SELECT *\n    FROM lineitem l2\n    WHERE l2.l_orderkey = l1.l_orderkey\n      AND l2.l_suppkey <> l1.l_suppkey\n  )\n  AND NOT EXISTS (\n    SELECT *\n    FROM lineitem l3\n    WHERE l3.l_orderkey = l1.l_orderkey\n      AND l3.l_suppkey <> l1.l_suppkey\n      AND l3.l_receiptdate > l3.l_commitdate\n  )\n  AND s_nationkey = n_nationkey\n  AND n_name = 'SAUDI ARABIA'\nGROUP BY s_name\nORDER BY numwait DESC, s_name\nLIMIT 100"
+  },
+  {
+    "query_id": "Q22",
+    "db_id": "tpch",
+    "question": "Identify customers from countries with codes 13, 31, 23, 29, 30, 18, or 17 who have positive account balances above the average for those countries but have never placed an order. Report country code, customer count, and total account balance, ordered by country code.",
+    "query": "SELECT\n    cntrycode,\n    count(*) AS numcust,\n    sum(c_acctbal) AS totacctbal\nFROM (\n    SELECT\n        substr(c_phone, 1, 2) AS cntrycode,\n        c_acctbal\n    FROM customer\n    WHERE substr(c_phone, 1, 2) IN ('13', '31', '23', '29', '30', '18', '17')\n      AND c_acctbal > (\n        SELECT avg(c_acctbal)\n        FROM customer\n        WHERE c_acctbal > 0.00\n          AND substr(c_phone, 1, 2) IN ('13', '31', '23', '29', '30', '18', '17')\n      )\n      AND NOT EXISTS (\n        SELECT *\n        FROM orders\n        WHERE o_custkey = c_custkey\n      )\n) AS custsale\nGROUP BY cntrycode\nORDER BY cntrycode"
+  }
+]

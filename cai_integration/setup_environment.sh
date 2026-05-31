@@ -104,7 +104,7 @@ else
 
     # Determine requirements file
     # Default: install core benchmark deps directly (avoids editable install issues)
-    CORE_DEPS="locust>=2.29 httpx>=0.27 aiohttp>=3.9 Pillow>=10.0 pyyaml>=6.0 matplotlib>=3.8 python-dotenv>=1.0"
+    CORE_DEPS="locust>=2.29 httpx>=0.27 aiohttp>=3.9 Pillow>=10.0 pyyaml>=6.0 matplotlib>=3.8 python-dotenv>=1.0 openai>=1.0 datasets>=2.14"
     if [ -n "${REQUIREMENTS_FILE:-}" ] && [ -f "$REQUIREMENTS_FILE" ]; then
         echo "Using requirements file from REQUIREMENTS_FILE env var: $REQUIREMENTS_FILE"
     else

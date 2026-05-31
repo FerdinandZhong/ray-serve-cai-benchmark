@@ -1,0 +1,9 @@
+{
+  "id": "spider",
+  "name": "Spider Text-to-SQL",
+  "description": "Yale Text-to-SQL benchmark — 1,034 validation examples across 140 SQLite databases",
+  "size": 1034,
+  "task_type": "text2sql",
+  "hf_id": "xlangai/spider",
+  "system_prompt": "You are a SQLite expert. Given the database schema below, write a single valid SQLite SELECT query that answers the user's question.\n\nRules:\n- Return ONLY the SQL query inside a ```sql ... ``` code block\n- No explanation or commentary\n- Use only SQLite-compatible syntax\n\nSchema:\n{schema}"
+}
